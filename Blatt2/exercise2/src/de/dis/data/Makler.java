@@ -7,17 +7,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-/**
- * Makler-Bean
- * 
- * Beispiel-Tabelle:
- * CREATE TABLE makler (
- * name varchar(255), 
- * address varchar(255), 
- * login varchar(40) UNIQUE, 
- * password varchar(40), 
- * id serial primary key);
- */
 public class Makler {
 	private int id = -1;
 	private String name;
@@ -76,7 +65,7 @@ public class Makler {
 			Connection con = DbConnectionManager.getInstance().getConnection();
 
 			// Erzeuge Anfrage
-			String selectSQL = "SELECT * FROM makler WHERE id = ?";
+			String selectSQL = "SELECT * FROM estateagent WHERE id = ?";
 			PreparedStatement pstmt = con.prepareStatement(selectSQL);
 			pstmt.setInt(1, id);
 
@@ -112,8 +101,8 @@ public class Makler {
 			// FC<ge neues Element hinzu, wenn das Objekt noch keine ID hat.
 			if (getId() == -1) {
 				// Achtung, hier wird noch ein Parameter mitgegeben,
-				// damit spC$ter generierte IDs zurC<ckgeliefert werden!
-				String insertSQL = "INSERT INTO makler(name, address, login, password) VALUES (?, ?, ?, ?)";
+				// damit später generierte IDs zurückgeliefert werden!
+				String insertSQL = "INSERT INTO estateagent(name, address, login, password) VALUES (?, ?, ?, ?)";
 
 				PreparedStatement pstmt = con.prepareStatement(insertSQL,
 						Statement.RETURN_GENERATED_KEYS);
@@ -135,7 +124,7 @@ public class Makler {
 				pstmt.close();
 			} else {
 				// Falls schon eine ID vorhanden ist, mache ein Update...
-				String updateSQL = "UPDATE makler SET name = ?, address = ?, login = ?, password = ? WHERE id = ?";
+				String updateSQL = "UPDATE estateagent SET name = ?, address = ?, login = ?, password = ? WHERE id = ?";
 				PreparedStatement pstmt = con.prepareStatement(updateSQL);
 
 				// Setze Anfrage Parameter

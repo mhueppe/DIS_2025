@@ -27,7 +27,7 @@ public class DbConnectionManager {
 		try {
 			// Holen der Einstellungen aus der db.properties Datei
 			Properties properties = new Properties();
-			FileInputStream stream = new FileInputStream(new File("db.properties"));
+			FileInputStream stream = new FileInputStream(new File("Blatt2/exercise2/db.properties"));
 			properties.load(stream);
 			stream.close();
 
