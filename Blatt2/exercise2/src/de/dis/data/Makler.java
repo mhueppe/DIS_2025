@@ -1,6 +1,8 @@
 
 package de.dis.data;
-
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -141,4 +143,68 @@ public class Makler {
 			e.printStackTrace();
 		}
 	}
+
+
+	public static List<Integer> getAllIds() {
+		List<Integer> ids = new ArrayList<>();
+		try {
+			Connection con = DbConnectionManager.getInstance().getConnection();
+			String sql = "SELECT id FROM estateagent";
+			PreparedStatement pstmt = con.prepareStatement(sql);
+			ResultSet rs = pstmt.executeQuery();
+
+			while (rs.next()) {
+				ids.add(rs.getInt("id"));
+			}
+
+			rs.close();
+			pstmt.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return ids;
+	}
+
+	public static String getAllIdsFormatted(){
+		return getAllIds().stream().map(String::valueOf).collect(Collectors.joining(", \n"));  // Join with comma and space
+	}
+
+	public static boolean deleteById(int id) {
+		if (!exists(id)){
+			return false;
+		}
+		try {
+			Connection con = DbConnectionManager.getInstance().getConnection();
+			String deleteSQL = "DELETE FROM estateagent WHERE id = ?";
+			PreparedStatement pstmt = con.prepareStatement(deleteSQL);
+			pstmt.setInt(1, id);
+			pstmt.executeUpdate();
+			pstmt.close();
+			return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	public static boolean exists(int id) {
+		try {
+			Connection con = DbConnectionManager.getInstance().getConnection();
+			String checkSQL = "SELECT 1 FROM estateagent WHERE id = ? LIMIT 1";
+			PreparedStatement pstmt = con.prepareStatement(checkSQL);
+			pstmt.setInt(1, id);
+			ResultSet rs = pstmt.executeQuery();
+	
+			boolean found = rs.next(); // true if a row exists
+	
+			rs.close();
+			pstmt.close();
+	
+			return found;
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
+	
 }
