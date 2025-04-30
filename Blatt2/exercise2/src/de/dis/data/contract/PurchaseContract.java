@@ -59,14 +59,15 @@ public class PurchaseContract extends Contract {
 
     public static void listAll() {
         List<PurchaseContract> contracts = new ArrayList<>();
-
-        try (Connection con = DbConnectionManager.getInstance().getConnection()) {
+        Connection con = DbConnectionManager.getInstance().getConnection();
+        try  {
             String sql = "SELECT c.contract_no, c.date, c.place, c.person_id, c.estate_id, " +
                     "p.no_of_installments, p.interest_rate " +
                     "FROM Contract c JOIN PurchaseContract p ON c.contract_no = p.contract_no";
 
-            PreparedStatement stmt = con.prepareStatement(sql);
-            ResultSet rs = stmt.executeQuery();
+            Statement stmt = con.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            ResultSet rs = stmt.executeQuery(sql);
+
 
             while (rs.next()) {
                 PurchaseContract pc = new PurchaseContract();
@@ -86,7 +87,7 @@ public class PurchaseContract extends Contract {
             e.printStackTrace();
         }
         for (PurchaseContract pc : contracts) {
-            System.out.println(pc);
+            System.out.println(pc.getContractNo());
         }
     }
 }
