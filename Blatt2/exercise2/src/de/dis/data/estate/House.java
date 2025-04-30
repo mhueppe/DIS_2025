@@ -52,13 +52,14 @@ public class House extends Estate {
             // Füge neues Element hinzu, wenn das Objekt noch keine ID hat.
             if (getId() == -1) {
                 // Insert into Estate table
-                String estateSQL = "INSERT INTO Estate (City, Postal_Code, Street, Street_Number, Square_Area) VALUES (?, ?, ?, ?, ?)";
+                String estateSQL = "INSERT INTO Estate (City, Postal_Code, Street, Street_Number, Square_Area, Agent_ID) VALUES (?, ?, ?, ?, ?, ?)";
                 PreparedStatement estateStmt = con.prepareStatement(estateSQL, PreparedStatement.RETURN_GENERATED_KEYS);
                 estateStmt.setString(1, getCity());
                 estateStmt.setString(2, getPostalCode());
                 estateStmt.setString(3, getStreet());
                 estateStmt.setString(4, getStreetNumber());
                 estateStmt.setDouble(5, getSquareArea());
+                estateStmt.setInt(6, getAgentId());
                 estateStmt.executeUpdate();
 
                 // Hole die Id des eingefügten Datensatzes
@@ -142,7 +143,7 @@ public class House extends Estate {
         return null;
     }
 
-    public static void delete(int id) {
+    public static boolean delete(int id) {
         Connection con = DbConnectionManager.getInstance().getConnection();
 
         // Delete on cascade, so we only need to delete from House table
@@ -152,8 +153,10 @@ public class House extends Estate {
             pstmt.setInt(1, id);
             pstmt.executeUpdate();
             pstmt.close();
+            return true;
         } catch (SQLException e) {
             e.printStackTrace();
+            return false;
         }
     }
 
@@ -203,7 +206,7 @@ public class House extends Estate {
         House[] houses = getAllHouses();
         if (houses != null && houses.length > 0) {
             for (House house : houses) {
-                System.out.println(house);
+                System.out.println(house.getId());
             }
         } else {
             System.out.println("Keine Häuser gefunden.");

@@ -8,6 +8,7 @@ public abstract class Estate {
     private String street;
     private String streetNumber;
     private double squareArea;
+    private int agentId;
 
     public int getId() {
         return id;
@@ -56,5 +57,14 @@ public abstract class Estate {
     public void setSquareArea(double squareArea) {
         this.squareArea = squareArea;
     }
+
+    public int getAgentId() {
+        return agentId;
+    }
+
+    public void setAgentId(int agentId) {
+        this.agentId = agentId;
+    }
+
 
 }
