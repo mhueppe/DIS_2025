@@ -187,6 +187,29 @@ public class Makler {
 		}
 	}
 	
+	public static int getIdByLogin(String login) {
+		try {
+			Connection con = DbConnectionManager.getInstance().getConnection();
+			String sql = "SELECT id FROM estateagent WHERE login = ?";
+			PreparedStatement pstmt = con.prepareStatement(sql);
+			pstmt.setString(1, login);
+			ResultSet rs = pstmt.executeQuery();
+	
+			if (rs.next()) {
+				int id = rs.getInt("id");
+				rs.close();
+				pstmt.close();
+				return id;
+			}
+	
+			rs.close();
+			pstmt.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return -1; // ID not found
+	}
+	
 	public static boolean exists(int id) {
 		try {
 			Connection con = DbConnectionManager.getInstance().getConnection();
