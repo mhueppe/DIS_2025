@@ -191,7 +191,6 @@ public class Apartment extends Estate {
             while (rs.next()) {
                 Apartment a = new Apartment();
                 a.setId(rs.getInt("ID"));
-                a.setAgentId(rs.getInt("agent_id"));
                 a.setCity(rs.getString("City"));
                 a.setPostalCode(rs.getString("Postal_Code"));
                 a.setStreet(rs.getString("Street"));
@@ -219,7 +218,7 @@ public class Apartment extends Estate {
         Apartment[] apartments = getAllApartments();
         if (apartments != null && apartments.length > 0) {
             for (Apartment apartment : apartments) {
-                System.out.println(apartment);
+                System.out.println(apartment.getId());
             }
         } else {
             System.out.println("No Apartments found.");
@@ -249,5 +248,5 @@ public class Apartment extends Estate {
     public static String getAllIdsFormatted(String table){
 		return getAllIdsFormatted("apartment");
 	}
-	
+
 }

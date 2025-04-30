@@ -1,9 +1,12 @@
 package de.dis;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
+import de.dis.data.contract.PurchaseContract;
+import de.dis.data.contract.TenancyContract;
+import de.dis.data.contract.Contract;
 import de.dis.data.Makler;
+import de.dis.data.Person;
 import de.dis.data.estate.Estate;
 import de.dis.data.estate.House;
 import de.dis.data.estate.Apartment;
@@ -49,7 +52,7 @@ public class Main {
 					showEstateManagementMenu();
 					break;
 				case MENU_CONTRACT_MANAGEMENT:
-					//showContractManagementMenu();
+					showContractManagementMenu();
 					break;
 				case QUIT:
 					return;
@@ -115,7 +118,7 @@ public class Main {
 		Makler m = new Makler();
 		setMaklerSettings(m);
 		System.out.println("Estate agent with ID "+m.getId()+" was created.");
-	}	
+	}
 
 	public static void setMaklerSettings(Makler m) {
 		m.setName(FormUtil.readString("Name"));
@@ -162,7 +165,7 @@ public class Main {
 			System.out.println("Login failed.");
 			return;
 		}
-				
+
 		//Maklerverwaltungsmenü
 		Menu estateMenu = new Menu("Estate Menu");
 		estateMenu.addEntry("New Estate", NEW_ESTATE);
@@ -201,10 +204,10 @@ public class Main {
 		return estateTypeMenu.show();
 	}
 
-	public static void newEstate(Makler m) {	
+	public static void newEstate(Makler m) {
 		final int HOUSE = 0;
 		final int APARTMENT = 1;
-		final int BACK = 2;	
+		final int BACK = 2;
 		switch(estateTypeSelection()) {
 			case HOUSE:
 				newHouse(m);
@@ -214,13 +217,13 @@ public class Main {
 				break;
 			case BACK:
 				return;
-		}	
+		}
 	}
 
-	public static void editEstate(Makler m) {	
+	public static void editEstate(Makler m) {
 		final int HOUSE = 0;
 		final int APARTMENT = 1;
-		final int BACK = 2;	
+		final int BACK = 2;
 		switch(estateTypeSelection()) {
 			case HOUSE:
 				editHouse(m);
@@ -230,7 +233,7 @@ public class Main {
 				break;
 			case BACK:
 				return;
-		}	
+		}
 	}
 	
 	public static void setEstateSettings(Estate e, Makler m) {
@@ -246,7 +249,7 @@ public class Main {
 		House h = new House();
 		setHouseSettings(h, m, false);
 	}
-	
+
 	public static void editHouse(Makler m) {
 		System.out.println("Select house by id to edit:");
 		System.out.println("____________");
@@ -327,11 +330,11 @@ public class Main {
 		Apartment a = new Apartment();
 		setApartmentSettings(a, m, false);
 	}
-	
-	public static void removeEstate() {	
+
+	public static void removeEstate() {
 		final int HOUSE = 0;
 		final int APARTMENT = 1;
-		final int BACK = 2;	
+		final int BACK = 2;
 		switch(estateTypeSelection()) {
 			case HOUSE:
 				removeHouse();
@@ -341,10 +344,10 @@ public class Main {
 				break;
 			case BACK:
 				return;
-		}	
+		}
 	}
 
-	public static void removeHouse() {		
+	public static void removeHouse() {
 		System.out.println("Select house id to remove:");
 		System.out.println("____________");
 		House.listAll();
@@ -353,7 +356,7 @@ public class Main {
 		House.delete(id);
 	}
 
-	public static void removeApartment() {		
+	public static void removeApartment() {
 		System.out.println("Select Apartment id to remove:");
 		System.out.println("____________");
 		Apartment.listAll();
@@ -362,4 +365,115 @@ public class Main {
 		Apartment.delete(id);
 	}
 
+
+	/**
+	 * Shows the contract management menu
+	 */
+	public static void showContractManagementMenu() {
+		//Menu options
+		final int NEW_PERSON = 0;
+		final int CREATE_CONTRACT = 1;
+		final int SHOW_ALL_CONTRACTS = 2;
+		final int BACK = 3;
+
+		//Contract management menu
+		Menu contractMenu = new Menu("Contract Management");
+		contractMenu.addEntry("Insert New Person", NEW_PERSON);
+		contractMenu.addEntry("Create Contract", CREATE_CONTRACT);
+		contractMenu.addEntry("Show All Contracts", SHOW_ALL_CONTRACTS);
+		contractMenu.addEntry("Back to main menu", BACK);
+
+		//Process input
+		while(true) {
+			int response = contractMenu.show();
+
+			switch(response) {
+				case NEW_PERSON:
+					insertPerson();
+					break;
+				case CREATE_CONTRACT:
+					createContract();
+					break;
+				case SHOW_ALL_CONTRACTS:
+					showAllContracts();
+					break;
+				case BACK:
+					return;
+			}
+		}
+	}
+
+	/**
+	 * Inserts a new person after collecting required data
+	 */
+	public static void insertPerson() {
+		Person p = new Person();
+
+		p.setFirstName(FormUtil.readString("First Name"));
+		p.setName(FormUtil.readString("Last Name"));
+		p.setAddress(FormUtil.readString("Address"));
+		p.save();
+
+		System.out.println("Person with ID "+p.getId()+" was created.");
+	}
+
+	/**
+	 * Creates a new contract after collecting required data
+	 */
+	public static void createContract() {
+		System.out.println("Contract type:");
+		System.out.println("1: Purchase contract (House)");
+		System.out.println("2: Tenancy contract (Apartment)");
+		Contract c;
+		int contractTypeChoice = FormUtil.readInt("Type (1 or 2)");
+
+		// Select contract type (purchase or tenancy)
+		if (contractTypeChoice == 1) {
+			c = new PurchaseContract();
+			// Display available houses
+			House.listAll();
+			c.setEstateId(FormUtil.readInt("House ID"));
+		} else {
+			c = new TenancyContract();
+			// Display available apartments
+			Apartment.listAll();
+			c.setEstateId(FormUtil.readInt("Apartment ID"));
+		}
+
+
+		// Display persons to select
+		System.out.println("Available persons:");
+		System.out.println("____________");
+		System.out.println(Person.getAllFormatted());
+		System.out.println("____________");
+		c.setPersonId(FormUtil.readInt("Person ID"));
+
+		// Display estate agents to select
+		//System.out.println("Available estate agents:");
+		//System.out.println("____________");
+		//Makler.listAll();
+		//System.out.println("____________");
+		//c.setEstateAgentId(FormUtil.readInt("Estate Agent ID"));
+
+
+
+		c.setDate(java.sql.Date.valueOf(FormUtil.readString("Date (YYYY-MM-DD)")));
+		c.setPlace(FormUtil.readString("Place"));
+		c.save();
+
+		System.out.println("Contract with ID " + c.getContractNo() + " was created.");
+    }
+
+	/**
+	 * Shows all contracts
+	 */
+	public static void showAllContracts() {
+
+		System.out.println("All Purchase Contracts:");
+		System.out.println("=============");
+		PurchaseContract.listAll();
+		System.out.println("All Tenancy Contracts:");
+		System.out.println("=============");
+		TenancyContract.listAll();
+	}
 }

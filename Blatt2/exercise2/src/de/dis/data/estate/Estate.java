@@ -67,7 +67,7 @@ public abstract class Estate {
     public void setSquareArea(double squareArea) {
         this.squareArea = squareArea;
     }
-    
+
     public int getAgentId() {
         return agentId;
     }
