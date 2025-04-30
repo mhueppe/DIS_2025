@@ -398,11 +398,18 @@ public class Main {
 			// Display available houses
 			House.listAll();
 			c.setEstateId(FormUtil.readInt("House ID"));
+			((PurchaseContract) c).setNumberOfInstallments(FormUtil.readInt("Number of Installments: "));
+			((PurchaseContract) c).setInterestRate(FormUtil.readInt("Interest Rate: "));
+
+
 		} else {
 			c = new TenancyContract();
 			// Display available apartments
 			Apartment.listAll();
 			c.setEstateId(FormUtil.readInt("Apartment ID"));
+			((TenancyContract) c).setStartDate(java.sql.Date.valueOf(FormUtil.readString("Date (YYYY-MM-DD): ")));
+			((TenancyContract) c).setDuration(FormUtil.readInt("Duration (in months): "));
+			((TenancyContract) c).setAdditionalCosts(FormUtil.readInt("Additional Cost: "));
 		}
 
 

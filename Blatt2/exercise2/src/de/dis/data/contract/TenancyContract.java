@@ -62,7 +62,6 @@ public class TenancyContract extends Contract {
             tenancyStmt.executeUpdate();
             tenancyStmt.close();
 
-            con.commit();
         } catch (Exception e) {
             e.printStackTrace();
         }
