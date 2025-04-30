@@ -5,6 +5,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import de.dis.data.DbConnectionManager;
 
@@ -71,14 +73,14 @@ public class Apartment extends Estate {
             // Füge neues Element hinzu, wenn das Objekt noch keine ID hat.
             if (getId() == -1) {
                 // Insert into Estate table with generated keys
-                String estateSQL = "INSERT INTO Estate (City, Postal_Code, Street, Street_Number, Square_Area, Agent_ID) VALUES (?, ?, ?, ?, ?, ?)";
+                String estateSQL = "INSERT INTO Estate (City, Postal_Code, Street, Street_Number, Square_Area, agent_id) VALUES (?, ?, ?, ?, ?, ?)";
                 PreparedStatement estateStmt = con.prepareStatement(estateSQL, PreparedStatement.RETURN_GENERATED_KEYS);
                 estateStmt.setString(1, getCity());
                 estateStmt.setString(2, getPostalCode());
                 estateStmt.setString(3, getStreet());
                 estateStmt.setString(4, getStreetNumber());
                 estateStmt.setDouble(5, getSquareArea());
-                estateStmt.setInt(6, getAgentId());
+                estateStmt.setDouble(6, getAgentId());
                 estateStmt.executeUpdate();
 
                 // Retrieve generated ID for Estate
@@ -219,11 +221,13 @@ public class Apartment extends Estate {
                 System.out.println(apartment.getId());
             }
         } else {
-            System.out.println("Keine Wohnungen gefunden.");
+            System.out.println("No Apartments found.");
         }
     }
 
-    public static boolean delete(int id) {
+    public static void delete(int id) {
+        deleteEstate(id);
+
         Connection con = DbConnectionManager.getInstance().getConnection();
 
         try {
@@ -232,10 +236,17 @@ public class Apartment extends Estate {
             pstmt.setInt(1, id);
             pstmt.executeUpdate();
             pstmt.close();
-            return true;
         } catch (SQLException e) {
             e.printStackTrace();
-            return false;
         }
     }
+
+    public static List<Integer> getAllIds() {
+		return getAllIds("apartment");
+	}
+
+    public static String getAllIdsFormatted(String table){
+		return getAllIdsFormatted("apartment");
+	}
+
 }
