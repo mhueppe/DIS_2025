@@ -160,6 +160,7 @@ public class Main {
 			System.out.println("Login sucessfull.");
 		}else{
 			System.out.println("Login failed.");
+			return;
 		}
 				
 		//Maklerverwaltungsmenü
@@ -243,15 +244,7 @@ public class Main {
 	
 	public static void newHouse(Makler m) {
 		House h = new House();
-		setHouseSettings(h, m);
-	}
-
-	public static void setHouseSettings(House h, Makler m) {
-		setEstateSettings(h, m);
-		h.setFloors(FormUtil.readInt("Floors"));
-		h.setPrice(FormUtil.readInt("Price"));
-		h.setGarden(FormUtil.readString("Garden [y/n]").equals("y"));
-		h.save();
+		setHouseSettings(h, m, false);
 	}
 	
 	public static void editHouse(Makler m) {
@@ -261,26 +254,63 @@ public class Main {
 		System.out.println("____________");
 		int id = FormUtil.readInt("Id");
 		House h = House.getHouse(id);
-		System.out.println("Change House:" + h.toString());
-		setHouseSettings(h, m);				
-		System.out.println("House with ID "+h.getId()+" was edited.");
-	}
-
-	public static void newApartment(Makler m) {
-		Apartment a = new Apartment();
-		setApartmentSettings(a, m);
+		System.out.println("Change House: " + h.toString());
+		setHouseSettings(h, m, true);
+		System.out.println("House with ID " + h.getId() + " was edited.");
 	}
 	
-	public static void setApartmentSettings(Apartment a, Makler m) {
+	public static void setHouseSettings(House h, Makler m, boolean isEdit) {
+		setEstateSettings(h, m);
+	
+		String floorsStr = FormUtil.readString("Floors" + (isEdit ? " (leave empty to keep: " + h.getFloors() + ")" : ""));
+		if (!floorsStr.isEmpty()) {
+			h.setFloors(Integer.parseInt(floorsStr));
+		}
+	
+		String priceStr = FormUtil.readString("Price" + (isEdit ? " (leave empty to keep: " + h.getPrice() + ")" : ""));
+		if (!priceStr.isEmpty()) {
+			h.setPrice(Integer.parseInt(priceStr));
+		}
+	
+		String gardenStr = FormUtil.readString("Garden [y/n]" + (isEdit ? " (leave empty to keep: " + (h.hasGarden() ? "y" : "n") + ")" : ""));
+		if (!gardenStr.isEmpty()) {
+			h.setGarden(gardenStr.equalsIgnoreCase("y"));
+		}
+	
+		h.save();
+	}
+	
+	public static void setApartmentSettings(Apartment a, Makler m, boolean isEdit) {
 		setEstateSettings(a, m);
-		a.setFloor(FormUtil.readInt("Floor"));
-		a.setRent(FormUtil.readInt("Rent"));
-		a.setRooms(FormUtil.readInt("Rooms"));
-		a.setBalcony(FormUtil.readString("Balcony [y/n]").equals("y"));
-		a.setBuiltInKitchen(FormUtil.readString("Built-in Kitchen [y/n]").equals("y"));
+	
+		String floorStr = FormUtil.readString("Floor" + (isEdit ? " (leave empty to keep: " + a.getFloor() + ")" : ""));
+		if (!floorStr.isEmpty()) {
+			a.setFloor(Integer.parseInt(floorStr));
+		}
+	
+		String rentStr = FormUtil.readString("Rent" + (isEdit ? " (leave empty to keep: " + a.getRent() + ")" : ""));
+		if (!rentStr.isEmpty()) {
+			a.setRent(Integer.parseInt(rentStr));
+		}
+	
+		String roomsStr = FormUtil.readString("Rooms" + (isEdit ? " (leave empty to keep: " + a.getRooms() + ")" : ""));
+		if (!roomsStr.isEmpty()) {
+			a.setRooms(Integer.parseInt(roomsStr));
+		}
+	
+		String balconyStr = FormUtil.readString("Balcony [y/n]" + (isEdit ? " (leave empty to keep: " + (a.hasBalcony() ? "y" : "n") + ")" : ""));
+		if (!balconyStr.isEmpty()) {
+			a.setBalcony(balconyStr.equalsIgnoreCase("y"));
+		}
+	
+		String kitchenStr = FormUtil.readString("Built-in Kitchen [y/n]" + (isEdit ? " (leave empty to keep: " + (a.hasBuiltInKitchen() ? "y" : "n") + ")" : ""));
+		if (!kitchenStr.isEmpty()) {
+			a.setBuiltInKitchen(kitchenStr.equalsIgnoreCase("y"));
+		}
+	
 		a.save();
 	}
-
+	
 	public static void editApartment(Makler m) {
 		System.out.println("Select apartment by id to edit:");
 		System.out.println("____________");
@@ -288,9 +318,14 @@ public class Main {
 		System.out.println("____________");
 		int id = FormUtil.readInt("Id");
 		Apartment a = Apartment.getApartment(id);
-		System.out.println("Change Apartment:" + a.toString());
-		setApartmentSettings(a, m);				
-		System.out.println("Apartment with ID "+a.getId()+" was edited.");
+		System.out.println("Change Apartment: " + a.toString());
+		setApartmentSettings(a, m, true);
+		System.out.println("Apartment with ID " + a.getId() + " was edited.");
+	}
+	
+	public static void newApartment(Makler m) {
+		Apartment a = new Apartment();
+		setApartmentSettings(a, m, false);
 	}
 	
 	public static void removeEstate() {	
