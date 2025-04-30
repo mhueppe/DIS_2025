@@ -32,8 +32,8 @@ public class Main {
 		//Erzeuge Menü
 		Menu mainMenu = new Menu("Main Menu");
 		mainMenu.addEntry("Estate Agent Menu", MENU_ESTATE_AGENT);
-		mainMenu.addEntry("Estate Menu", MENU_ESTATE_AGENT);
-		mainMenu.addEntry("Contract Management", MENU_ESTATE_AGENT);
+		mainMenu.addEntry("Estate Menu", MENU_ESTATE_MANAGEMENT);
+		mainMenu.addEntry("Contract Management", MENU_CONTRACT_MANAGEMENT);
 
 		mainMenu.addEntry("Quit", QUIT);
 		
@@ -49,7 +49,7 @@ public class Main {
 					showEstateManagementMenu();
 					break;
 				case MENU_CONTRACT_MANAGEMENT:
-					showContractManagementMenu();
+					//showContractManagementMenu();
 					break;
 				case QUIT:
 					return;
@@ -113,44 +113,36 @@ public class Main {
 	 */
 	public static void newMakler() {
 		Makler m = new Makler();
-		
+		setMaklerSettings(m);
+		System.out.println("Estate agent with ID "+m.getId()+" was created.");
+	}	
+
+	public static void setMaklerSettings(Makler m) {
 		m.setName(FormUtil.readString("Name"));
 		m.setAddress(FormUtil.readString("Address"));
 		m.setLogin(FormUtil.readString("Login"));
 		m.setPassword(FormUtil.readString("Password"));
 		m.save();
-		
-		System.out.println("Estate agent with ID "+m.getId()+" was created.");
-	}	
+	}
 
 	public static void editMakler() {
 		System.out.println("Select estate agent by id to edit:");
 		System.out.println("____________");
-		System.out.println(Makler.getAllIdsFormatted());
+		Makler.listAll();
 		System.out.println("____________");
 		int id = FormUtil.readInt("Id");
 		Makler m = Makler.load(id);
-		
-		m.setName(FormUtil.readString("Name"));
-		m.setAddress(FormUtil.readString("Address"));
-		m.setLogin(FormUtil.readString("Login"));
-		m.setPassword(FormUtil.readString("Password"));
-		m.save();
-		
+		setMaklerSettings(m);
 		System.out.println("Estate agent with ID "+m.getId()+" was edited.");
 	}
 
 	public static void removeMakler() {		
 		System.out.println("Select estate agent id to remove:");
 		System.out.println("____________");
-		System.out.println(Makler.getAllIdsFormatted());
+		Makler.listAll();
 		System.out.println("____________");
 		int id = FormUtil.readInt("Id");
-		if (Makler.deleteById(id)){
-			System.out.println("Estate agent with id: "+ id +" was removed.");
-		}else{
-			System.out.println("Invalid id.");
-		};
+		Makler.delete(id);
 	}
 
 	// ----------- Estate Management Menu
@@ -162,24 +154,19 @@ public class Main {
 		final int BACK = 3;
 		
 		String login = FormUtil.readString("Login");
-		int id = Makler.getIdByLogin(login);
-		if (id == -1){
-			System.out.println("Invalid login.");
-			return;
-		}
-		Makler makler = Makler.load(id);
 		String pass = FormUtil.readString("Password");
-		if (!makler.getPassword().equals(pass)){
-			System.out.println("Invalid password.");
-			return;
+		Makler m = Makler.login(login, pass);
+		if (m != null){
+			System.out.println("Login sucessfull.");
+		}else{
+			System.out.println("Login failed.");
 		}
-		
-		
+				
 		//Maklerverwaltungsmenü
 		Menu estateMenu = new Menu("Estate Menu");
-		estateMenu.addEntry("New Estate Agent", NEW_ESTATE);
-		estateMenu.addEntry("Edit Estate Agent", EDIT_ESTATE);
-		estateMenu.addEntry("Remove Estate Agent", REMOVE_ESTATE);
+		estateMenu.addEntry("New Estate", NEW_ESTATE);
+		estateMenu.addEntry("Edit Estate", EDIT_ESTATE);
+		estateMenu.addEntry("Remove Estate", REMOVE_ESTATE);
 		estateMenu.addEntry("Back to main menu", BACK);
 		
 		//Verarbeite Eingabe
@@ -188,10 +175,10 @@ public class Main {
 			
 			switch(response) {
 				case NEW_ESTATE:
-					newEstate();
+					newEstate(m);
 					break;
 				case EDIT_ESTATE:
-					editEstate();
+					editEstate(m);
 					break;
 				case REMOVE_ESTATE:
 					removeEstate();
@@ -202,8 +189,7 @@ public class Main {
 		}
 	}
 
-	public static void newEstate() {
-		//Maklerverwaltungsmenü
+	public static int estateTypeSelection(){
 		final int HOUSE = 0;
 		final int APARTMENT = 1;
 		final int BACK = 2;
@@ -211,42 +197,82 @@ public class Main {
 		estateTypeMenu.addEntry("House", HOUSE);
 		estateTypeMenu.addEntry("Apartment", APARTMENT);
 		estateTypeMenu.addEntry("Back", BACK);
-		int response = estateTypeMenu.show();
+		return estateTypeMenu.show();
+	}
 
-		switch(response) {
+	public static void newEstate(Makler m) {	
+		final int HOUSE = 0;
+		final int APARTMENT = 1;
+		final int BACK = 2;	
+		switch(estateTypeSelection()) {
 			case HOUSE:
-				newHouse();
+				newHouse(m);
 				break;
 			case APARTMENT:
-				newApartment();
+				newApartment(m);
 				break;
 			case BACK:
 				return;
-		}
-		
+		}	
+	}
+
+	public static void editEstate(Makler m) {	
+		final int HOUSE = 0;
+		final int APARTMENT = 1;
+		final int BACK = 2;	
+		switch(estateTypeSelection()) {
+			case HOUSE:
+				editHouse(m);
+				break;
+			case APARTMENT:
+				editApartment(m);
+				break;
+			case BACK:
+				return;
+		}	
 	}
 	
-	public static void setEstateSettings(Estate e) {
+	public static void setEstateSettings(Estate e, Makler m) {
 		e.setCity(FormUtil.readString("City"));
 		e.setPostalCode(FormUtil.readString("Postal Code"));
 		e.setStreet(FormUtil.readString("Street"));
 		e.setStreetNumber(FormUtil.readString("Street Number"));
 		e.setSquareArea(FormUtil.readInt("Square Area"));
+		e.setAgentId(m.getId());
 	}
 	
-
-	public static void newHouse() {
-		House m = new House();
-		setEstateSettings(m);
-		m.setFloors(FormUtil.readInt("Floors"));
-		m.setPrice(FormUtil.readInt("Price"));
-		m.setGarden(FormUtil.readString("Garden [y/n]").equals("y"));
-		m.save();
+	public static void newHouse(Makler m) {
+		House h = new House();
+		setHouseSettings(h, m);
 	}
 
-	public static void newApartment() {
+	public static void setHouseSettings(House h, Makler m) {
+		setEstateSettings(h, m);
+		h.setFloors(FormUtil.readInt("Floors"));
+		h.setPrice(FormUtil.readInt("Price"));
+		h.setGarden(FormUtil.readString("Garden [y/n]").equals("y"));
+		h.save();
+	}
+	
+	public static void editHouse(Makler m) {
+		System.out.println("Select house by id to edit:");
+		System.out.println("____________");
+		House.listAll();
+		System.out.println("____________");
+		int id = FormUtil.readInt("Id");
+		House h = House.getHouse(id);
+		System.out.println("Change House:" + h.toString());
+		setHouseSettings(h, m);				
+		System.out.println("House with ID "+h.getId()+" was edited.");
+	}
+
+	public static void newApartment(Makler m) {
 		Apartment a = new Apartment();
-		setEstateSettings(a);
+		setApartmentSettings(a, m);
+	}
+	
+	public static void setApartmentSettings(Apartment a, Makler m) {
+		setEstateSettings(a, m);
 		a.setFloor(FormUtil.readInt("Floor"));
 		a.setRent(FormUtil.readInt("Rent"));
 		a.setRooms(FormUtil.readInt("Rooms"));
@@ -254,33 +280,51 @@ public class Main {
 		a.setBuiltInKitchen(FormUtil.readString("Built-in Kitchen [y/n]").equals("y"));
 		a.save();
 	}
-	public static void editEstate() {
-		System.out.println("Select estate agent by id to edit:");
+
+	public static void editApartment(Makler m) {
+		System.out.println("Select apartment by id to edit:");
 		System.out.println("____________");
-		System.out.println(Makler.getAllIdsFormatted());
+		Apartment.listAll();
 		System.out.println("____________");
 		int id = FormUtil.readInt("Id");
-		Makler m = Makler.load(id);
-		
-		m.setName(FormUtil.readString("Name"));
-		m.setAddress(FormUtil.readString("Address"));
-		m.setLogin(FormUtil.readString("Login"));
-		m.setPassword(FormUtil.readString("Password"));
-		m.save();
-		
-		System.out.println("Estate agent with ID "+m.getId()+" was edited.");
+		Apartment a = Apartment.getApartment(id);
+		System.out.println("Change Apartment:" + a.toString());
+		setApartmentSettings(a, m);				
+		System.out.println("Apartment with ID "+a.getId()+" was edited.");
+	}
+	
+	public static void removeEstate() {	
+		final int HOUSE = 0;
+		final int APARTMENT = 1;
+		final int BACK = 2;	
+		switch(estateTypeSelection()) {
+			case HOUSE:
+				removeHouse();
+				break;
+			case APARTMENT:
+				removeApartment();
+				break;
+			case BACK:
+				return;
+		}	
 	}
 
-	public static void removeEstate() {		
-		System.out.println("Select estate agent id to remove:");
+	public static void removeHouse() {		
+		System.out.println("Select house id to remove:");
 		System.out.println("____________");
-		System.out.println(Makler.getAllIdsFormatted());
+		House.listAll();
 		System.out.println("____________");
 		int id = FormUtil.readInt("Id");
-		if (Makler.deleteById(id)){
-			System.out.println("Estate agent with id: "+ id +" was removed.");
-		}else{
-			System.out.println("Invalid id.");
-		};
+		House.delete(id);
 	}
+
+	public static void removeApartment() {		
+		System.out.println("Select Apartment id to remove:");
+		System.out.println("____________");
+		Apartment.listAll();
+		System.out.println("____________");
+		int id = FormUtil.readInt("Id");
+		Apartment.delete(id);
+	}
+
 }
