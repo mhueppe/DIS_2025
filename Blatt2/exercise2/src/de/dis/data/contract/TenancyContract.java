@@ -62,21 +62,21 @@ public class TenancyContract extends Contract {
             tenancyStmt.executeUpdate();
             tenancyStmt.close();
 
-            con.commit();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
     public static void listAll() {
         List<TenancyContract> contracts = new ArrayList<>();
-
-        try (Connection con = DbConnectionManager.getInstance().getConnection()) {
+        Connection con = DbConnectionManager.getInstance().getConnection();
+        try  {
             String sql = "SELECT c.contract_no, c.date, c.place, c.person_id, c.estate_id, " +
                     "t.start_date, t.duration, t.additional_costs " +
                     "FROM Contract c JOIN TenancyContract t ON c.contract_no = t.contract_no";
 
-            PreparedStatement stmt = con.prepareStatement(sql);
-            ResultSet rs = stmt.executeQuery();
+            Statement stmt = con.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            ResultSet rs = stmt.executeQuery(sql);
+
 
             while (rs.next()) {
                 TenancyContract tc = new TenancyContract();
@@ -97,7 +97,7 @@ public class TenancyContract extends Contract {
             e.printStackTrace();
         }
         for (TenancyContract tc : contracts) {
-            System.out.println(tc);
+            System.out.println(tc.getContractNo());
         }
     }
 
