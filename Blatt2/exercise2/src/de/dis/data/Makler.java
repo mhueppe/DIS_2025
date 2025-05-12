@@ -1,63 +1,78 @@
-
 package de.dis.data;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+/**
+ * Makler-Bean
+ * 
+ * Beispiel-Tabelle:
+ * CREATE TABLE makler (
+ * name varchar(255),
+ * address varchar(255),
+ * login varchar(40) UNIQUE,
+ * password varchar(40),
+ * id serial primary key);
+ */
 public class Makler {
 	private int id = -1;
 	private String name;
 	private String address;
 	private String login;
 	private String password;
-	
+
 	public int getId() {
 		return id;
 	}
-	
+
 	public void setId(int id) {
 		this.id = id;
 	}
-	
+
 	public String getName() {
 		return name;
 	}
-	
+
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+
 	public String getAddress() {
 		return address;
 	}
-	
+
 	public void setAddress(String address) {
 		this.address = address;
 	}
-	
+
 	public String getLogin() {
 		return login;
 	}
-	
+
 	public void setLogin(String login) {
 		this.login = login;
 	}
-	
+
 	public String getPassword() {
 		return password;
 	}
-	
+
 	public void setPassword(String password) {
 		this.password = password;
 	}
-	
+
+	@Override
+	public String toString() {
+		return "Estate Agent [id=" + id + ", name=" + name + ", address=" + address
+				+ ", login=" + login + "]";
+	}
+
 	/**
 	 * Lädt einen Makler aus der Datenbank
+	 * 
 	 * @param id ID des zu ladenden Maklers
 	 * @return Makler-Instanz
 	 */
@@ -90,7 +105,7 @@ public class Makler {
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Speichert den Makler in der Datenbank. Ist noch keine ID vergeben
 	 * worden, wird die generierte Id von der DB geholt und dem Model übergeben.
@@ -103,7 +118,7 @@ public class Makler {
 			// FC<ge neues Element hinzu, wenn das Objekt noch keine ID hat.
 			if (getId() == -1) {
 				// Achtung, hier wird noch ein Parameter mitgegeben,
-				// damit später generierte IDs zurückgeliefert werden!
+				// damit spC$ter generierte IDs zurC<ckgeliefert werden!
 				String insertSQL = "INSERT INTO estateagent(name, address, login, password) VALUES (?, ?, ?, ?)";
 
 				PreparedStatement pstmt = con.prepareStatement(insertSQL,
@@ -144,67 +159,125 @@ public class Makler {
 		}
 	}
 
+	/**
+	 * Gibt den Makler von der ID zurück
+	 */
+	public static Makler getMakler(int id) {
+		Connection con = DbConnectionManager.getInstance().getConnection();
 
-	public static List<Integer> getAllIds() {
-		List<Integer> ids = new ArrayList<>();
 		try {
-			Connection con = DbConnectionManager.getInstance().getConnection();
-			String sql = "SELECT id FROM estateagent";
-			PreparedStatement pstmt = con.prepareStatement(sql);
+			String selectSQL = "SELECT * FROM estateagent WHERE id = ?";
+			PreparedStatement pstmt = con.prepareStatement(selectSQL);
+			pstmt.setInt(1, id);
 			ResultSet rs = pstmt.executeQuery();
 
-			while (rs.next()) {
-				ids.add(rs.getInt("id"));
+			if (rs.next()) {
+				Makler m = new Makler();
+				m.setId(rs.getInt("id"));
+				m.setName(rs.getString("name"));
+				m.setAddress(rs.getString("address"));
+				m.setLogin(rs.getString("login"));
+				m.setPassword(rs.getString("password"));
+				rs.close();
+				pstmt.close();
+				return m;
 			}
-
-			rs.close();
-			pstmt.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		return ids;
+		return null;
 	}
 
-	public static String getAllIdsFormatted(){
-		return getAllIds().stream().map(String::valueOf).collect(Collectors.joining(", \n"));  // Join with comma and space
-	}
+	/**
+	 * Löscht den Makler aus der Datenbank
+	 */
+	public static void delete(int id) {
+		Connection con = DbConnectionManager.getInstance().getConnection();
 
-	public static boolean deleteById(int id) {
-		if (!exists(id)){
-			return false;
-		}
 		try {
-			Connection con = DbConnectionManager.getInstance().getConnection();
 			String deleteSQL = "DELETE FROM estateagent WHERE id = ?";
 			PreparedStatement pstmt = con.prepareStatement(deleteSQL);
 			pstmt.setInt(1, id);
 			pstmt.executeUpdate();
 			pstmt.close();
-			return true;
 		} catch (SQLException e) {
 			e.printStackTrace();
-			return false;
 		}
 	}
-	
-	public static boolean exists(int id) {
+
+	/**
+	 * Gibt alle Makler aus der Datenbank zurück
+	 * 
+	 * @return Array mit Makler-Objekten
+	 */
+	public static Makler[] getAllMakler() {
+		Connection con = DbConnectionManager.getInstance().getConnection();
+
 		try {
-			Connection con = DbConnectionManager.getInstance().getConnection();
-			String checkSQL = "SELECT 1 FROM estateagent WHERE id = ? LIMIT 1";
-			PreparedStatement pstmt = con.prepareStatement(checkSQL);
-			pstmt.setInt(1, id);
-			ResultSet rs = pstmt.executeQuery();
-	
-			boolean found = rs.next(); // true if a row exists
-	
+			String selectSQL = "SELECT * FROM estateagent";
+			Statement stmt = con.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+			ResultSet rs = stmt.executeQuery(selectSQL);
+
+			// Zähle die Anzahl der Datensätze
+			rs.last();
+			int count = rs.getRow();
+			rs.beforeFirst();
+
+			// Erzeuge Array mit Makler-Objekten
+			Makler[] makler = new Makler[count];
+			int i = 0;
+			while (rs.next()) {
+				Makler m = new Makler();
+				m.setId(rs.getInt("id"));
+				m.setName(rs.getString("name"));
+				m.setAddress(rs.getString("address"));
+				m.setLogin(rs.getString("login"));
+				m.setPassword(rs.getString("password"));
+				makler[i++] = m;
+			}
+
 			rs.close();
-			pstmt.close();
-	
-			return found;
+			stmt.close();
+			return makler;
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		return false;
+		return null;
 	}
-	
+
+	/**
+	 * Gibt alle Makler aus der Datenbank aus
+	 */
+	public static void listAll() {
+		Makler[] makler = getAllMakler();
+		if (makler != null && makler.length > 0) {
+			for (Makler m : makler) {
+				System.out.println(m);
+			}
+		} else {
+			System.out.println("Keine Makler gefunden.");
+		}
+	}
+
+	public static Makler login(String login, String password) {
+		Connection con = DbConnectionManager.getInstance().getConnection();
+
+		try {
+			String selectSQL = "SELECT * FROM estateagent WHERE login = ? AND password = ?";
+			PreparedStatement pstmt = con.prepareStatement(selectSQL);
+			pstmt.setString(1, login);
+			pstmt.setString(2, password);
+			ResultSet rs = pstmt.executeQuery();
+
+			if (rs.next()) {
+				int id = rs.getInt("id");
+				rs.close();
+				pstmt.close();
+				return load(id);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
 }
