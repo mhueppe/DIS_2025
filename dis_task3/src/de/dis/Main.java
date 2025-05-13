@@ -29,10 +29,10 @@ public class Main {
         Connection c1 = setup_new_connection();
         c1.setAutoCommit(false);
         //c1.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
-        //c1.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
+        c1.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
         Connection c2 = setup_new_connection();
         c2.setAutoCommit(false);
-        //c2.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+        c2.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
         //c2.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
         
         
@@ -86,7 +86,7 @@ public class Main {
         try {
             // Holen der Einstellungen aus der db.properties Datei
             Properties properties = new Properties();
-            FileInputStream stream = new FileInputStream(new File("db.properties"));
+            FileInputStream stream = new FileInputStream("dis_task3/db.properties");
             properties.load(stream);
             stream.close();
 
