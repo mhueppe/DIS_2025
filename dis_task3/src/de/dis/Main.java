@@ -34,8 +34,32 @@ public class Main {
         c2.setAutoCommit(false);
         c2.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
         //c2.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
-        
-        
+
+        Statement stmtC1 = c1.createStatement();
+        ResultSet rs1 = stmtC1.executeQuery("SELECT name FROM dissheet3 WHERE id = 1;");
+        if (rs1.next()) {
+            System.out.println("Read (default isolation): " + rs1.getString("name"));
+        }
+        rs1.close();
+        printLocks(c1, "Default Isolation (e.g., REPEATABLE READ)");
+        printPredicateLocks(c1, "Default Isolation (e.g., REPEATABLE READ)");
+        stmtC1.close();
+        c1.commit();
+
+        c1.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+        c1.setAutoCommit(false);
+        Statement stmtC1Serializable = c1.createStatement();
+        ResultSet rs2 = stmtC1Serializable.executeQuery("SELECT name FROM dissheet3 WHERE id = 1;");
+        if (rs2.next()) {
+            System.out.println("Read (Serializable): " + rs2.getString("name"));
+        }
+        rs2.close();
+        printLocks(c1, "Serializable Isolation");
+        printPredicateLocks(c1, "Serializable Isolation");
+        stmtC1Serializable.close();
+        c1.commit();
+
+
         //S1 = r1(x) w2(x) c2 w1(x) r1(x) c1
         List<RunnableOperation> operations = new ArrayList<>(Arrays.asList(
 
@@ -99,6 +123,42 @@ public class Main {
             e.printStackTrace();
         }
         return null;
+    }
+
+    private static void printLocks(Connection conn, String label) throws SQLException {
+        System.out.println("==> " + label + ": pg_locks");
+        PreparedStatement stmt = conn.prepareStatement(
+                "SELECT relation::regclass, mode, granted " +
+                        "FROM pg_locks WHERE relation::regclass = 'dissheet3'::regclass;");
+        ResultSet rs = stmt.executeQuery();
+        while (rs.next()) {
+            System.out.println("Lock: " + rs.getString("relation") +
+                    " | Mode: " + rs.getString("mode") +
+                    " | Granted: " + rs.getBoolean("granted"));
+        }
+        rs.close();
+        stmt.close();
+    }
+
+    private static void printPredicateLocks(Connection conn, String label) {
+        System.out.println("==> " + label + ": pg_predicate_locks");
+        try {
+            PreparedStatement stmt = conn.prepareStatement(
+                    "SELECT * FROM pg_catalog.pg_predicate_locks WHERE relation = 'dissheet3'::regclass;");
+            ResultSet rs = stmt.executeQuery();
+            boolean found = false;
+            while (rs.next()) {
+                found = true;
+                System.out.println("Predicate Lock: " + rs.getString("lockmode"));
+            }
+            if (!found) {
+                System.out.println("No predicate locks found.");
+            }
+            rs.close();
+            stmt.close();
+        } catch (SQLException e) {
+            System.out.println("Could not access pg_predicate_locks: " + e.getMessage());
+        }
     }
 
 
