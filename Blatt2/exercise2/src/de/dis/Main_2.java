@@ -1,7 +1,5 @@
 package de.dis;
 
-import java.util.List;
-
 import de.dis.data.contract.PurchaseContract;
 import de.dis.data.contract.TenancyContract;
 import de.dis.data.contract.Contract;
@@ -14,7 +12,7 @@ import de.dis.data.estate.Apartment;
 /**
  * Hauptklasse
  */
-public class Main {
+public class Main_2 {
 	/**
 	 * Startet die Anwendung
 	 */
