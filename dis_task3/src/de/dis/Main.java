@@ -67,15 +67,14 @@ public class Main {
         c1.commit();
 
         // 3.2 a)
-        lockConflicts();
+       // lockConflicts();
 
         // 3.2 b)
-        repeatableReadPreventsPhantoms();
+       // repeatableReadPreventsPhantoms();
 
         // 3.3 a) Schedule S1 = r1(x) w2(x) c2 w1(x) r1(x) c1
-
-        c1.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
-        c2.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+        c1.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+        c2.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
 
         // Set auto-commit to false for manual transaction control
         c1.setAutoCommit(false);
@@ -121,6 +120,76 @@ public class Main {
         runSchedule(s3, c1, c2);
         printTableContents();
 
+        // 3.3 c)
+        System.out.println("\n=== 3.3 c) Manual SS2PL Implementation ===");
+        c1.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+        c2.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+        c1.setAutoCommit(false);
+        c2.setAutoCommit(false);
+
+        // Schedule S1 with SS2PL
+        resetTable();
+        System.out.println("\nRunning Schedule S1 with SS2PL");
+        List<RunnableOperation> s1_ss2pl = new ArrayList<>(Arrays.asList(
+                new RunnableOperation(c1, 'l', "SELECT * FROM dissheet3 WHERE id = 1 FOR SHARE;"),
+                new RunnableOperation(c1, 'r', "SELECT name FROM dissheet3 WHERE id = 1;"),
+
+                new RunnableOperation(c2, 'l', "SELECT * FROM dissheet3 WHERE id = 1 FOR UPDATE;"),
+                new RunnableOperation(c2, 'w', "UPDATE dissheet3 SET name = 'Mickey' WHERE id = 1;"),
+                new RunnableOperation(c2, 'c', "COMMIT;"),
+
+                new RunnableOperation(c1, 'l', "SELECT * FROM dissheet3 WHERE id = 1 FOR UPDATE;"),
+                new RunnableOperation(c1, 'w', "UPDATE dissheet3 SET name = name || ' + Max' WHERE id = 1;"),
+
+                new RunnableOperation(c1, 'r', "SELECT name FROM dissheet3 WHERE id = 1;"),
+                new RunnableOperation(c1, 'c', "COMMIT;")
+        ));
+        runScheduleSS2PL(s1_ss2pl, c1, c2);
+        printTableContents();
+
+        // Schedule S2 with SS2PL
+        resetTable();
+        System.out.println("\nRunning Schedule S2 with SS2PL");
+        List<RunnableOperation> s2_ss2pl = new ArrayList<>(Arrays.asList(
+                new RunnableOperation(c1, 'l', "SELECT * FROM dissheet3 WHERE id = 1 FOR SHARE;"),
+                new RunnableOperation(c1, 'r', "SELECT name FROM dissheet3 WHERE id = 1;"),
+
+                new RunnableOperation(c2, 'l', "SELECT * FROM dissheet3 WHERE id = 1 FOR UPDATE;"),
+                new RunnableOperation(c2, 'w', "UPDATE dissheet3 SET name = 'UpdatedByT2' WHERE id = 1;"),
+                new RunnableOperation(c2, 'c', "COMMIT;"),
+
+                new RunnableOperation(c1, 'l', "SELECT * FROM dissheet3 WHERE id = 1 FOR SHARE;"),
+                new RunnableOperation(c1, 'r', "SELECT name FROM dissheet3 WHERE id = 1;"),
+                new RunnableOperation(c1, 'c', "COMMIT;")
+        ));
+        runScheduleSS2PL(s2_ss2pl, c1, c2);
+        printTableContents();
+
+        // Schedule S3 with SS2PL
+        resetTable();
+        System.out.println("\nRunning Schedule S3 with SS2PL");
+        List<RunnableOperation> s3_ss2pl = new ArrayList<>(Arrays.asList(
+                new RunnableOperation(c2, 'l', "SELECT * FROM dissheet3 WHERE id = 1 FOR SHARE;"),
+                new RunnableOperation(c2, 'r', "SELECT name FROM dissheet3 WHERE id = 1;"), // r2(x)
+
+                new RunnableOperation(c1, 'l', "SELECT * FROM dissheet3 WHERE id = 1 FOR UPDATE;"),
+                new RunnableOperation(c1, 'w', "UPDATE dissheet3 SET name = name || ' + X1' WHERE id = 1;"), // w1(x)
+                new RunnableOperation(c1, 'l', "SELECT * FROM dissheet3 WHERE id = 2 FOR UPDATE;"),
+                new RunnableOperation(c1, 'w', "UPDATE dissheet3 SET name = name || ' + Y1' WHERE id = 2;"), // w1(y)
+                new RunnableOperation(c1, 'c', "COMMIT;"), // c1
+
+                new RunnableOperation(c2, 'l', "SELECT * FROM dissheet3 WHERE id = 2 FOR SHARE;"),
+                new RunnableOperation(c2, 'r', "SELECT name FROM dissheet3 WHERE id = 2;"), // r2(y)
+
+                new RunnableOperation(c2, 'l', "SELECT * FROM dissheet3 WHERE id = 1 FOR UPDATE;"),
+                new RunnableOperation(c2, 'w', "UPDATE dissheet3 SET name = name || ' + X2' WHERE id = 1;"), // w2(x)
+                new RunnableOperation(c2, 'l', "SELECT * FROM dissheet3 WHERE id = 2 FOR UPDATE;"),
+                new RunnableOperation(c2, 'w', "UPDATE dissheet3 SET name = name || ' + Y2' WHERE id = 2;"), // w2(y)
+                new RunnableOperation(c2, 'c', "COMMIT;") // c2
+        ));
+        runScheduleSS2PL(s3_ss2pl, c1, c2);
+        printTableContents();
+
     }
 
     private static void runSchedule(List<RunnableOperation> operations, Connection c1, Connection c2) throws InterruptedException {
@@ -141,6 +210,50 @@ public class Main {
         }
 
         System.out.println("Finished all threads");
+    }
+
+    // New method for running schedules with SS2PL tracking
+    private static void runScheduleSS2PL(List<RunnableOperation> operations, Connection c1, Connection c2) throws InterruptedException {
+        ExecutorService executor_t1 = Executors.newFixedThreadPool(1);
+        ExecutorService executor_t2 = Executors.newFixedThreadPool(1);
+
+        List<String> executionOrder = new ArrayList<>();
+
+        for (RunnableOperation op : operations) {
+            if (op.c == c1) {
+                executor_t1.execute(() -> {
+                    op.run();
+                    synchronized(executionOrder) {
+                        executionOrder.add("T1-" + op.readwrite);
+                    }
+                });
+            }
+            if (op.c == c2) {
+                executor_t2.execute(() -> {
+                    op.run();
+                    synchronized(executionOrder) {
+                        executionOrder.add("T2-" + op.readwrite);
+                    }
+                });
+            }
+            Thread.sleep(250);  // Ensures scheduling order
+        }
+
+        executor_t1.shutdown();
+        executor_t2.shutdown();
+
+        while (!executor_t1.isTerminated() || !executor_t2.isTerminated()) {
+            Thread.sleep(500);
+            System.out.println("Waiting for threads...");
+        }
+
+        System.out.println("Finished all threads");
+
+        // Print the resulting serial schedule
+        System.out.println("\nResulting Serial Schedule:");
+        for (String op : executionOrder) {
+            System.out.println(op);
+        }
     }
 
     private static void printTableContents() throws SQLException {
@@ -172,7 +285,6 @@ public class Main {
             e.printStackTrace();
         }
     }
-
 
     public static Connection setup_new_connection() {
         try {
@@ -280,7 +392,6 @@ public class Main {
         }
     }
 
-
     private static void printLocks(Connection conn, String label) throws SQLException {
         System.out.println("==> " + label + ": pg_locks");
         PreparedStatement stmt = conn.prepareStatement(
@@ -316,5 +427,4 @@ public class Main {
             System.out.println("Could not access pg_predicate_locks: " + e.getMessage());
         }
     }
-
 }
