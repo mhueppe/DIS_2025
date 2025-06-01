@@ -1,0 +1,39 @@
+\documentclass[a4paper,12pt]{book}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{enumitem}
+\usepackage{wrapfig}
+\usepackage{tabularx}
+\usepackage{booktabs} % For better table aesthetics
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+\usepackage{array}    % For more flexible column definitions
+\usepackage{titlesec}
+\usepackage[dvipsnames]{xcolor}
+%\newcommand\green[1]{\textcolor{ForestGreen}{#1}}
+%\newcommand\greenbf[1]{\green{\textbf{#1}}}
+%\newcommand\red[1]{\textcolor{BrickRed}{#1}}
+\usepackage[hidelinks]{hyperref}
+
+\newcommand{\first}{$1^{\text{st}}$}
+\newcommand{\second}{$2^{\text{nd}}$}
+\newcommand{\third}{$3^{\text{rd}}$}
+
+% Set the spacing for all itemize lists
+\setlist[itemize]{itemsep=1pt, topsep=1pt}  % Adjust the values as needed
+
+\geometry{margin=1in}
+\title{Databases and Information Systems}
+\author{Michael Hüppe}
+\date{\today}
+
+\begin{document}
+	\maketitle
+	\tableofcontents
+	% Section: Information Content
+	\input{chapters/architectures.tex}
+	\input{chapters/exercise2.tex}
+\end{document}

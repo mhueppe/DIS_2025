@@ -1,0 +1,48 @@
+\chapter{Exercise 2}
+
+\section{Surrogate Keys}
+\begin{itemize}
+	\item artificial primary key that has no business meaning - it exists solely to uniquely identify records in a table
+	\item \textbf{Example}: Auto-incrementing ID column (like SERIAL in PostgreSQL)
+	\item they never change
+	\item simpler joins (single-column integer keys are efficient)
+	\item avoid exposing business data in URLs/APIs	
+\end{itemize}
+
+\section{Partitioning}
+When mapping object-oriented inheritance to relational tables, there are two main strategies: 
+
+\subsection{Horizontal Partitioning (Table per Subclass)}
+\begin{itemize}
+	\item each subclass gets its own table containing all attributes (both inherited and specific)
+	\item no parent table exits
+	\item \textbf{Pros}:
+	\begin{itemize}
+		\item No NULL values (houses don't need apartment fields)
+		\item clean separation of concerns
+	\end{itemize}
+	\item \textbf{Cons}:
+	\begin{itemize}
+		\item Duplicates shared attributes (e.g. city, postal code in both tables)
+		\item harder to query "all estates" $\rightarrow$ requires \textbf{UNION}
+	\end{itemize}
+\end{itemize}
+
+\subsection{Vertical Partitioning (Table per Hierarchy)}
+\begin{itemize}
+	\item Single table for the entire hierarchy with: 
+	\begin{itemize}
+		\item a \textbf{type} column to distinguish subclasses (e.g. "House", "Apartment")
+		\item all possible attributes (many NULLs for subtype-specific fields)
+	\end{itemize}
+	\item \textbf{Pros}:
+	\begin{itemize}
+		\item Simple queries (no joins needed)
+		\item easy to get "all estates"
+	\end{itemize}
+	\item \textbf{Cons}:
+	\begin{itemize}
+		\item Many NULL values (wastes space)
+		\item No DB-level constraints to enforce subtype rules 
+	\end{itemize}
+\end{itemize}

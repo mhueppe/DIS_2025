@@ -50,8 +50,6 @@ public class PurchaseContract extends Contract {
             purchaseStmt.setDouble(3, interestRate);
             purchaseStmt.executeUpdate();
             purchaseStmt.close();
-
-            con.commit();
         } catch (Exception e) {
             e.printStackTrace();
         }

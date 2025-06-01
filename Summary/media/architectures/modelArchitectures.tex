@@ -1,0 +1,28 @@
+\begin{tikzpicture}[
+	every node/.style={rectangle, draw, fill=blue!20, minimum width=2.5cm, minimum height=1cm, align=center},
+	node distance=1.5cm and 1.5cm
+	]
+	
+	% Hierarchical model
+	\node (root) at (0,0) {Root};
+	\node (child1) [below left=of root] {Child 1};
+	\node (child2) [below=of root] {Child 2};
+	\node (child3) [below right=of root] {Child 3};
+	
+	\draw (root) -- (child1);
+	\draw (root) -- (child2);
+	\draw (root) -- (child3);
+	
+	% Network model
+	% Shift down a bit for separation
+	\node (n1) at (-2.5,-5) {Node 1};
+	\node (n2) at (2.5,-5) {Node 2};
+	\node (n3) at (-1.5,-7) {Node 3};
+	\node (n4) at (1.5,-7) {Node 4};
+	
+	\draw (n1) -- (n2);
+	\draw (n1) -- (n3);
+	\draw (n2) -- (n4);
+	\draw (n3) -- (n4);
+	
+\end{tikzpicture}

@@ -49,7 +49,7 @@ CREATE TABLE Contract (
                           date DATE NOT NULL,
                           place VARCHAR(100) NOT NULL,
                           person_id INTEGER NOT NULL,
-                          estate_id INTEGER NOT NULL,
+                          estate_id INTEGER NOT NULL UNIQUE,
                           FOREIGN KEY (person_id) REFERENCES Person(id) ON DELETE CASCADE,
                           FOREIGN KEY (estate_id) REFERENCES Estate(id) ON DELETE CASCADE
 );
