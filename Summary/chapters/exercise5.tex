@@ -1,0 +1,47 @@
+\chapter{Exercise 5}
+
+\section{Concepts}
+\subsection{Deferred Writes (No-Force)}
+\begin{itemize}
+	\item When a client commits, you don't immediately write data to tdisk 
+	\item you defer it until the buffer is "too full"
+	\item this mimics real-world behavior where disk writes are expensive
+\end{itemize}
+
+\section{No Dirty Writes (No-Steal)}
+\begin{itemize}
+	\item You never write uncommited data to disk
+	\item only data from committed transaction can be flushed
+	\item this makes recovery simple (no undo needed)
+\end{itemize}
+
+\section{Physical Logging}
+\begin{itemize}
+	\item You log the exact new state ofo page (called after-image)
+	\item Every operation is logged before it's commited (Write Ahead Logging)
+\end{itemize}
+
+\section{Crash Recovery (Redo Only)}
+\begin{itemize}
+	\item If the system crashes, you: 
+	\begin{itemize}
+		\item read the log
+		\item Find all commited transactions
+		\item Reapply their writes if needed
+	\end{itemize}
+\end{itemize}
+
+\section{Why this matters}
+Real-world databases: 
+\begin{itemize}
+	\item Delay writes to optimize performance
+	\item maintain logs for safety 
+	\item Use recovery algorithms (like ARIES) to bring the DB back to a consistent state after a crash	
+\end{itemize}
+
+You're building a simplified version of that: 
+\begin{itemize}
+	\item No transaction rollback (no UNDO)
+	\item just REDO commited changes
+	\item Emphasizes correctness and robustness in concurrent enrionments	
+\end{itemize}
