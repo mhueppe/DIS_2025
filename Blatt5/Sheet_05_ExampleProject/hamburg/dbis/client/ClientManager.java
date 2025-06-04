@@ -22,7 +22,6 @@ public class ClientManager {
     public void startClients() {
         int totalClients = 3;
         int pagesPerClient = 20;
-        int writesPerTx = 6; 
 
         RandomHashSet<String> exampleData = DataLoader.loadExampleData();
         int clientid = 1;
@@ -32,7 +31,7 @@ public class ClientManager {
             int maxPage = minPage + pagesPerClient; 
 
             Schedule schedule = Schedule.createSchedule();
-            for (int w = 0; w < writesPerTx; w++) {
+            for (int w = 0; w < 1 + new Random().nextInt(6); w++) {
                 int page = nextInt(minPage, maxPage);
                 String data = exampleData.getRandomElement();
                 schedule.addOperation(page, data);

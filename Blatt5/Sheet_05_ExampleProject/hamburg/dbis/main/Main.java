@@ -22,6 +22,7 @@ public class Main {
             ClientManager.getInstance().startClients();
 
         System.out.println("");
+        
     }
 
     static private boolean getConsoleInput(String label) {

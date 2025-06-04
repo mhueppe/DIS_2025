@@ -116,6 +116,8 @@ public class PersistenceManager {
         if (buffer.size() > 5){
             flushCommittedPages();
         }
+        System.out.println("Buffer size: " + buffer.size());
+    
     }
 
      private void flushCommittedPages() {
@@ -137,6 +139,8 @@ public class PersistenceManager {
         for (int pid : toRemove) {
             buffer.remove(pid);
         }
+        System.out.println("Buffer size after removing: " + buffer.size());
+
     }
 
 
