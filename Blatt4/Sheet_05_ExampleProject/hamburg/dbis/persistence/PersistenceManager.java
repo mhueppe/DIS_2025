@@ -18,14 +18,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class PersistenceManager {
 
     static final private PersistenceManager _manager;
-
+    static int BUFFERSIZE = 5; 
     private final Hashtable<Integer, BufferEntry> buffer = new Hashtable<>();
     
     private final AtomicInteger nextLSN = new AtomicInteger(1);
     private final AtomicInteger nextTransactionID = new AtomicInteger(1000);
     
-    // taid => pageids 
-    private final HashMap<Integer, HashSet<Integer>> transactionPageMap = new HashMap<>();
     // taid => committed or not
     private final HashMap<Integer, String> transactionStatus  = new HashMap<>();    
 
@@ -113,7 +111,7 @@ public class PersistenceManager {
         // Buffer write
         buffer.put(pageid, new BufferEntry(lsn, data, taid));
 
-        if (buffer.size() > 5){
+        if (buffer.size() >= BUFFERSIZE){
             flushCommittedPages();
         }
         System.out.println("Buffer size: " + buffer.size());
