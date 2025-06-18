@@ -7,8 +7,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Sorts;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 
 import twitter4j.GeoLocation;
@@ -48,20 +50,16 @@ public class MovieService extends MovieServiceBase {
 	 * Create a new MovieService by connecting to MongoDB.
 	 */
 	public MovieService() {
-		// TODO see for example https://mongodb.github.io/mongo-java-driver/3.12/driver/tutorials/
-		// TODO: connect to MongoDB
-		mongo = null;
-		// TODO Select database "imdb"
-		db = null;
+		mongo = MongoClients.create("mongodb://localhost:8081");
+		db = mongo.getDatabase("imdb");
 		// Create a GriFS FileSystem Object using the db
 		fs = GridFSBuckets.create(db);
 		createSampleImage();
 		// Print the name of all collections in that database
 		printCollections();
 
-		// TODO Take "movies" and "tweets" collection
-		movies = null;
-		tweets = null;
+		movies = db.getCollection("movies");
+		tweets = db.getCollection("tweets");
 
 		// If database isn't filled (has less than 1000 documents) delete
 		// everything and fill it
@@ -80,8 +78,7 @@ public class MovieService extends MovieServiceBase {
 	 * @return the matching DBObject
 	 */
 	public Document findMovieByTitle(String title) {
-		//TODO : implement
-		Document result = null;
+		Document result = movies.find(eq("title", title)).first();
 		return result;
 	}
 
@@ -102,8 +99,11 @@ public class MovieService extends MovieServiceBase {
 	 * @return the FindIterable for the query
 	 */
 	public FindIterable<Document> getBestMovies(int minVotes, double minRating, int limit) {
-		//TODO : implement
-		FindIterable<Document>  result = null;
+		Bson filter = Filters.and(
+				Filters.gte("votes", minVotes),
+				Filters.gte("rating", minRating)
+		);
+		FindIterable<Document>  result = movies.find(filter).sort(Sorts.descending("rating")).limit(limit);
 		return result;
 	}
 
@@ -119,8 +119,8 @@ public class MovieService extends MovieServiceBase {
 	 */
 	public FindIterable<Document> getByGenre(String genreList, int limit) {
 		List<String> genres = Arrays.asList(genreList.split(","));
-		//TODO : implement
-		FindIterable<Document>  result = null;
+		Bson filter = Filters.in("genre", genres);
+		FindIterable<Document>  result = movies.find(filter).limit(limit);
 		return result;
 	}
 
@@ -137,9 +137,8 @@ public class MovieService extends MovieServiceBase {
 	 * @return the FindIterable for the query
 	 */
 	public FindIterable<Document> searchByPrefix(String titlePrefix, int limit) {
-		//TODO : implement
-		Document prefixQuery = null;
-		FindIterable<Document> result = null;
+		Document prefixQuery = new Document("title", new Document("$regex", "^" + titlePrefix).append("$options", "i"));
+		FindIterable<Document> result = movies.find(prefixQuery).limit(limit);
 		return result;
 	}
 
@@ -150,8 +149,9 @@ public class MovieService extends MovieServiceBase {
 	 * @return the FindIterable for the query
 	 */
 	public FindIterable getTweetedMovies() {
-		//TODO : implement
-		FindIterable<Document>  result = null;
+		List<Object> tweetedMovieIds = tweets.distinct("movie_id", Object.class).into(new java.util.ArrayList<>());
+		Document query = new Document("_id", new Document("$in", tweetedMovieIds));
+		FindIterable<Document>  result = movies.find(query);
 		return result;
 	}
 
@@ -165,9 +165,9 @@ public class MovieService extends MovieServiceBase {
 	 *            the comment to save
 	 */
 	public void saveMovieComment(String id, String comment) {
-		// TODO implement
-		Document query = null;
-		Document update = null;
+		ObjectId objectId = new ObjectId(id);
+		Document query = new Document("_id", objectId);
+		Document update = new Document("$push", new Document("comments", comment));
 		movies.updateOne(query, update);
 	}
 
@@ -197,8 +197,8 @@ public class MovieService extends MovieServiceBase {
 	 * @return the FindIterable for the query
 	 */
 	public FindIterable getByTweetsKeywordRegex(String keyword, int limit) {
-		//TODO : implement
-		FindIterable<Document>  result = null;
+		Pattern pattern = Pattern.compile(".*" + Pattern.quote(keyword) + ".*", Pattern.CASE_INSENSITIVE);
+		FindIterable<Document>  result = tweets.find(Filters.regex("text", pattern)).limit(limit);
 		return result;
 	}
 
@@ -217,9 +217,9 @@ public class MovieService extends MovieServiceBase {
 	public FindIterable<Document> searchTweets(String query) {
 		// Create a text index on the "text" property of tweets
 		tweets.createIndex(new Document("text", "text").append("user.name", "text"));
-		
-		// TODO: implement
-		FindIterable<Document> result = null;
+		Document searchQuery = new Document("$text", new Document("$search", query));
+		Document projection = new Document("score", new Document("$meta", "textScore"));
+		FindIterable<Document> result = tweets.find(searchQuery).projection(projection).sort(projection);
 		
 		return result;
 	}
@@ -233,8 +233,7 @@ public class MovieService extends MovieServiceBase {
 	 * @return the FindIterable for the query
 	 */
 	public FindIterable<Document>  getNewestTweets(int limit) {
-		//TODO : implement
-		FindIterable<Document>  result = null;
+		FindIterable<Document>  result = tweets.find().sort(new Document("_id", -1)).limit(limit);
 		return result;
 	}
 
@@ -247,8 +246,8 @@ public class MovieService extends MovieServiceBase {
 	 * @return the FindIterable for the query
 	 */
 	public FindIterable<Document>  getGeotaggedTweets(int limit) {
-		//TODO : implement
-		FindIterable<Document>  result = null;
+		FindIterable<Document>  result = tweets.find(Filters.and(Filters.exists("coordinates", true),
+						Filters.ne("coordinates", null))).limit(limit);
 		return result;
 	}
 
@@ -265,9 +264,7 @@ public class MovieService extends MovieServiceBase {
 	 */
 	public void saveFile(String name, InputStream inputStream, String contentType) {
 		GridFSUploadOptions options = new GridFSUploadOptions().chunkSizeBytes(358400).metadata(new Document("contentType", contentType));
-		// TODO IMPLEMENT
-	    ObjectId fileId = null; 
-	}
+		ObjectId fileId =fs.uploadFromStream(name, inputStream, options);	}
 
 	/**
 	 * Retrieves a file from GridFS. If the file is not found (==null) the file
@@ -278,11 +275,9 @@ public class MovieService extends MovieServiceBase {
 	 * @return The retrieved GridFS File
 	 */
 	public GridFSFile getFile(String name) {
-		// TODO: Implement
-		GridFSFile file = null;
+		GridFSFile file = fs.find(Filters.eq("filename", name)).first();
 		if (file == null) {
-			file = null;
-		}
+			file = fs.find(Filters.eq("filename", "sample.png")).first();		}
 		return file;
 	}
 
