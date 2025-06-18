@@ -50,7 +50,7 @@ public class MovieService extends MovieServiceBase {
 	 * Create a new MovieService by connecting to MongoDB.
 	 */
 	public MovieService() {
-		mongo = MongoClients.create("mongodb://localhost:8081");
+		mongo = MongoClients.create("mongodb://root:password@localhost:27017");
 		db = mongo.getDatabase("imdb");
 		// Create a GriFS FileSystem Object using the db
 		fs = GridFSBuckets.create(db);

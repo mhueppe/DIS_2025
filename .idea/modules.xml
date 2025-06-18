@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/DIS_2025.iml" filepath="$PROJECT_DIR$/.idea/DIS_2025.iml" />
-      <module fileurl="file://$PROJECT_DIR$/Blatt5/exercise5/exercise5/MongoDB-Task.iml" filepath="$PROJECT_DIR$/Blatt5/exercise5/exercise5/MongoDB-Task.iml" />
     </modules>
   </component>
 </project>
